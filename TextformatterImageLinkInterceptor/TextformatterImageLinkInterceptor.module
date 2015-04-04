@@ -1,0 +1,164 @@
+<?php
+
+/**
+ * HTML Image Link Interceptor Textformatter
+ *
+ * @copyright 2015, Roman Seidl
+ * based on HTML Image Interceptor Textformatter @copyright 2013, Martijn Geerts 
+ * Licensed under GNU/GPL v2, see LICENSE.TXT
+ *
+ */
+
+
+class TextformatterImageLinkInterceptor extends Textformatter implements  Module, ConfigurableModule {
+
+    /**
+     * Required module information
+     *
+     */
+
+    public static function getModuleInfo() {
+        return array(
+            'title' => __("Image Link Interceptor", __FILE__),
+            'summary' => __("Adds a class to links that contain images.", __FILE__),
+            'author' => 'Roman Seidl',
+            'version' => 1,
+            'autoload' => false,
+        );
+    }
+
+    /**
+     * Variable caching & Settings
+     *
+     */
+
+    protected $data = array(); // module data
+    public $str = null; // input & output of this module
+    Private $images = null; // array with all found images
+    Private $find = null; // all images if the $replace image is present
+    Private $replace = null; // replacement of the $find images
+
+    /**
+     * defaultConfigData for module settings
+     *
+     */
+
+    protected static $defaultConfigData = array(
+	"class" => "img"
+    );
+
+    /**
+     * Set all settings to data
+     *
+     */
+
+    public function __construct() {
+        foreach(self::$defaultConfigData as $key => $value) {
+            $this->data[$key] = $value;
+        }
+    }
+
+    /**
+     * Return the formatted string
+     *
+     */
+
+    public function format(&$str) {
+        // set string to $this->str
+        $this->str = $str;
+        // sets $this->links with links containing images.
+        $this->collectImageLinks();
+        // if there are no raw images, give str unformatted back.
+        if(!$this->links) return $str;
+        // create find & replace arrays
+        $this->setFindReplace();
+        // get originals
+        $find = $this->find;
+        // replacements
+        $replace = $this->replace;
+        // what should we give back ?
+        $str = count($replace) ? str_replace($find, $replace, $str) : $str;
+        return $str;
+    }
+
+    /**
+     * Push the found raw images in the $this->images array or set $this->images to null
+     *
+      */
+
+    private function collectImageLinks() {
+	preg_match_all('/<a\b(?=\s|>)
+	(?:=\'[^\']*\'|="[^"]*"|=[^\'"][^\s>]*|[^>=])*
+	>\s*
+	<img\b(?=\s|>)
+	(?:=\'[^\']*\'|="[^"]*"|=[^\'"][^\s>]*|[^>=])*
+	>
+	<\/a>/imsx',$this->str,$links);
+
+        $this->links = count($links[0]) ? $links[0] : null;
+    }
+
+    /**
+     * Building the find & replace array.
+     *
+      */
+
+    public function setFindReplace() {
+
+        $find = array();
+        $replace = array();
+
+        $links = $this->links;
+	$data = $this->data;
+
+        foreach($links as $original) {
+                $find[] = $original;
+
+		$re = "/<a[^\\/]+class=[\"'][^\"'].+()[\"']/i";
+		if(preg_match($re, $original)){
+		    $subst = " .".$data["class"];
+		    $replace[] = preg_replace($re, $subst, $original, 1);
+		} else {
+		   $subst = "<a class=\"".$data["class"]."\"";
+		   $replace[] = preg_replace("/<a/i", $subst, $original, 1);
+		}
+        }
+        if(count($replace)) {
+            $this->find = $find;
+            $this->replace = $replace;
+        }
+    }
+
+
+
+    /**
+     * Module settings
+     *
+    */
+
+    public static function getModuleConfigInputfields(array $data) {
+
+        $modules = wire('modules');
+        $config = wire('config');
+        $inputfields = new InputfieldWrapper();
+
+        foreach(self::$defaultConfigData as $key => $value) {
+            if(!isset($data[$key])) $data[$key] = $value;
+        }
+
+        $fieldset = $modules->get('InputfieldFieldset');
+        $fieldset->columnWidth = 50;
+        $fieldset->label = __("Global Settings");
+
+        $f = $modules->get('InputfieldText');
+        $f->name = "class";
+        $f->label = __("class");
+        $f->description = __("Class to add to links that contain images.");
+        $f->value = $data["class"];
+	$fieldset->append($f);
+
+        $inputfields->append($fieldset);
+
+        return $inputfields;
+    }
+}
