@@ -22,7 +22,7 @@ class TextformatterImageLinkInterceptor extends Textformatter implements  Module
             'title' => __("Image Link Interceptor", __FILE__),
             'summary' => __("Adds a class to links that contain images.", __FILE__),
             'author' => 'Roman Seidl',
-            'version' => 1,
+            'version' => 10,
             'autoload' => false,
         );
     }
