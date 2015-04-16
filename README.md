@@ -1,4 +1,4 @@
-# image-link-interceptor
+#  TextformatterImageLinkInterceptor
 Processwire Image Link Interceptor Module
 
 @copyright 2015, Roman Seidl  
