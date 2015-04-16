@@ -5,7 +5,7 @@ Processwire Image Link Interceptor Module
 based on HTML Image Interceptor Textformatter @copyright 2013, Martijn Geerts  
 Licensed under GNU/GPL v2, see LICENSE.TXT
 
-This module simply adds a class to all images that ae contained in a link as the first child.
+This module simply adds a class to all links that contain images as the first child.
 
 Thus the following:
 
